@@ -1,0 +1,11 @@
+{
+  "name": "entry",
+  "version": "1.0.0",
+  "description": "Example application for edu-schedule-importer",
+  "main": "",
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@chinokoyuki/edu-schedule-importer": "file:../library"
+  }
+}

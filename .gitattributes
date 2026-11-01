@@ -1,0 +1,11 @@
+* text=auto eol=lf
+
+# ArkTS is a TypeScript dialect. Without this, GitHub reports .ets files as
+# unrecognised and leaves them out of the language breakdown.
+*.ets text eol=lf linguist-language=TypeScript linguist-detectable=true
+*.ts text eol=lf linguist-language=TypeScript
+
+# Configuration and docs
+*.json5 text eol=lf
+*.json text eol=lf
+*.md text eol=lf

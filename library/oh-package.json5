@@ -1,0 +1,28 @@
+{
+  "name": "@chinokoyuki/edu-schedule-importer",
+  "version": "0.1.0",
+  "description": "Read a school timetable from an ArkWeb session and turn it into structured courses.",
+  "main": "Index.ets",
+  "author": "chinokoyuki",
+  "license": "Apache-2.0",
+  "packageType": "InterfaceHar",
+  "keywords": [
+    "harmonyos",
+    "arkts",
+    "arkweb",
+    "timetable",
+    "schedule",
+    "course",
+    "education"
+  ],
+  "homepage": "https://github.com/chinokoyuki/edu-schedule-importer",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chinokoyuki/edu-schedule-importer.git"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@ohos/hypium": "1.0.24",
+    "@ohos/hamock": "1.0.0"
+  }
+}

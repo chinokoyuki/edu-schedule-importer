@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "Example application for edu-schedule-importer"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "Reads a timetable from a web page and lists the courses"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "Schedule Import Demo"
+    }
+  ]
+}

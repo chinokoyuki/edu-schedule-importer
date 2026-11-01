@@ -1,0 +1,11 @@
+{
+  "module": {
+    "name": "edu_schedule_importer",
+    "type": "har",
+    "description": "$string:edu_importer_desc",
+    "deviceTypes": [
+      "phone",
+      "tablet"
+    ]
+  }
+}

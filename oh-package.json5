@@ -1,0 +1,7 @@
+{
+  "modelVersion": "6.0.0",
+  "description": "Example application for edu-schedule-importer",
+  "dependencies": {},
+  "devDependencies": {},
+  "dynamicDependencies": {}
+}
