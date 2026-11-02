@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0 - 2026-11-02
+
+- Add an Entss (乘方) adapter. It reads the two endpoints the timetable page calls instead of scraping the grid, so weeks, weekdays and clock times arrive already separated.
+- Courses from that adapter carry `startTime` and `endTime`, and leave `startPeriod` and `endPeriod` at 0.
+- New warning codes: `no_semester`, `request_failed`.
+- `EduImporters.ids()` now lists three adapters.
+
 ## 0.1.0 - 2026-11-02
 
 First release.

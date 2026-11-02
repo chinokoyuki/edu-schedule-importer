@@ -14,7 +14,7 @@ It also ships no school list. Which adapter to use is a choice the app makes, no
 
 ## Features
 
-- Two adapters: a generic HTML table reader and one for the Qiangzhi (强智) layout
+- Three adapters: a generic HTML table reader, one for the Qiangzhi (强智) layout, and one for Entss (乘方), which reads the API the page calls itself
 - Injected scripts return plain JSON, so parsing can be tested without a device
 - Week text handling: `1-16周`, `1-8,10-12周`, `1-15周(单)`, `第3-5周`
 - Period to time mapping through a configurable table
@@ -80,8 +80,9 @@ Call `readTimetable` after the user has reached the timetable page. The script r
 | Symbol | Purpose |
 | --- | --- |
 | `EduImporters.byId(id)` | Returns an adapter, or null for an unknown id. |
-| `EduImporters.ids()` | Ids shipped with this release: `generic-table`, `qiangzhi`. |
+| `EduImporters.ids()` | Ids shipped with this release: `generic-table`, `qiangzhi`, `entss`. |
 | `EduImporters.generic(periods?)` / `.qiangzhi(periods?)` | Builds an adapter directly. |
+| `EduImporters.entss()` | Builds the Entss adapter, which needs no period table. |
 | `runInWebView(controller, script)` | Runs the script in the page. Never rejects; see below. |
 | `unwrapScriptResult(text)` | Removes the extra JSON string layer some kernels add. |
 | `adapter.parse(raw)` | Converts script output into an `ImportResult`. Never throws. |
@@ -104,7 +105,9 @@ interface ImportResult {
 
 `ImportedCourse` carries `name`, `teacher`, `room`, `campus`, `weekday` (1-7), `startPeriod`, `endPeriod`, `weeks`, `startTime` and `endTime`. `TermInfo` carries `label`, `startDate` and `totalWeeks`.
 
-Warnings are stable codes: `invalid_json`, `no_schedule_page`, `no_weekday_header`, `no_courses`, `missing_weeks`, `script_failed`.
+`startPeriod` and `endPeriod` are 0 for Entss courses. That adapter gets clock times from the school's own schedule instead of mapping period numbers, so `startTime` and `endTime` are the fields to read.
+
+Warnings are stable codes: `invalid_json`, `no_schedule_page`, `no_semester`, `request_failed`, `no_weekday_header`, `no_courses`, `missing_weeks`, `script_failed`.
 
 `runInWebView` returns `{"error":"script_failed"}` instead of rejecting when ArkWeb refuses to run the script. The adapters turn that into the `script_failed` warning, so the whole flow needs no `try` block.
 
@@ -148,6 +151,24 @@ That cell yields two courses. Reading it as one string would let the first cours
   ]
 }
 ```
+
+`entss`
+
+```json
+{
+  "sem": "202601",
+  "week1": "2026-09-07",
+  "records": [
+    {
+      "kcmc": "高等数学", "teaxms": "张三", "jxcdmc": "博学楼203",
+      "zc": "1-16", "qsxq": "1", "jsxq": "1",
+      "qssj": "08:00:00", "jssj": "09:40:00"
+    }
+  ]
+}
+```
+
+`records` are the rows of the school's timetable API, passed through unchanged. `zc` holds weeks as `1-8,10-12`, `qsxq` and `jsxq` hold weekdays as numbers, and the two time fields use `HH:mm:ss`. When `jsxq` is past `qsxq`, the course is repeated for each day in between, which is how a lab booked across three afternoons arrives.
 
 ## Writing an adapter
 
@@ -198,7 +219,9 @@ hvigor may also print two notes about the local module: `Missing module info for
 - An adapter matches one layout. When a vendor redesigns its pages, the adapter breaks. Expect to maintain it.
 - Period times come from `PeriodTable`, not from the page. Schools with different bells need their own table.
 - The generic table reader follows a `名称(1-2节)1-16周校区教室教师` order. Missing parts are left empty; a very unusual order may land a room name in the teacher field. Cells without any period marker fall back to the whole text as the course name, and only when the cell has a single line.
-- Qiangzhi support reads `.kbcontent` cells and `font[title]` hints. Other vendors are not implemented yet.
+- Qiangzhi support reads `.kbcontent` cells and `font[title]` hints.
+- Entss support calls two endpoints of that product (`getCalendarWeekDatas` and `getDatesOfWeek`) with the semester code it finds in the page. A school that renamed those paths, or that hides the semester field, returns `request_failed` or `no_semester`.
+- Other vendors are not implemented.
 
 ## Tests
 

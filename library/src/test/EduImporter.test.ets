@@ -18,6 +18,16 @@ const QIANGZHI_PAYLOAD: string = '{"system":"qiangzhi","sem":"2026-2027-1","cell
   '{"d":3,"n":"大学物理","t":"赵六","w":"1-15周(单)(3-4节)","r":"实验楼101"}' +
   ']}'
 
+const ENTSS_PAYLOAD: string = '{"system":"entss","sem":"202601","week1":"2026-09-07","records":[' +
+  '{"kcmc":"高等数学","teaxms":"张三","jxcdmc":"博学楼203","zc":"1-16","qsxq":"1","jsxq":"1",' +
+  '"qssj":"08:00:00","jssj":"09:40:00"},' +
+  '{"kcmc":"数据结构","teaxms":"李四","jxcdmc":"明理楼401","zc":"1-8,10-12","qsxq":"2","jsxq":"4",' +
+  '"qssj":"14:00:00","jssj":"15:40:00"},' +
+  '{"kcmc":"数据结构","teaxms":"李四","jxcdmc":"明理楼401","zc":"1-8,10-12","qsxq":"2","jsxq":"4",' +
+  '"qssj":"14:00:00","jssj":"15:40:00"},' +
+  '{"kcmc":"无周次课","zc":"","qsxq":"5","qssj":"08:00:00","jssj":"09:40:00"}' +
+  ']}'
+
 export default function eduImporterTest() {
   describe('week rules', () => {
     it('expands ranges, lists and odd or even markers', 0, () => {
@@ -190,9 +200,70 @@ export default function eduImporterTest() {
     })
   })
 
+  describe('entss adapter', () => {
+    it('reads api records, splits weekday spans and removes duplicates', 0, () => {
+      const adapter = EduImporters.byId('entss')
+      expect(adapter !== null).assertTrue()
+      if (adapter === null) {
+        return
+      }
+      const result: ImportResult = adapter.parse(ENTSS_PAYLOAD)
+      expect(result.term.label).assertEqual('2026-2027学年第1学期')
+      expect(result.term.totalWeeks).assertEqual(16)
+      expect(result.term.startDate !== null).assertTrue()
+      if (result.term.startDate !== null) {
+        expect(result.term.startDate.getDate()).assertEqual(7)
+      }
+      expect(result.courses.length).assertEqual(4)
+
+      const math: ImportedCourse = result.courses[0]
+      expect(math.name).assertEqual('高等数学')
+      expect(math.weekday).assertEqual(1)
+      expect(math.teacher).assertEqual('张三')
+      expect(math.room).assertEqual('博学楼203')
+      expect(math.startTime).assertEqual('08:00')
+      expect(math.endTime).assertEqual('09:40')
+      expect(math.startPeriod).assertEqual(0)
+      expect(math.weeks.length).assertEqual(16)
+
+      expect(result.courses[1].weekday).assertEqual(2)
+      expect(result.courses[2].weekday).assertEqual(3)
+      expect(result.courses[3].weekday).assertEqual(4)
+      expect(result.courses[1].weeks.join(',')).assertEqual('1,2,3,4,5,6,7,8,10,11,12')
+      expect(result.warnings.indexOf('missing_weeks') >= 0).assertTrue()
+    })
+
+    it('reports page errors', 0, () => {
+      const adapter = EduImporters.byId('entss')
+      if (adapter === null) {
+        return
+      }
+      expect(adapter.parse('nope').warnings[0]).assertEqual('invalid_json')
+      expect(adapter.parse('{"error":"no_semester"}').warnings[0]).assertEqual('no_semester')
+      expect(adapter.parse('{"error":"request_failed"}').warnings[0]).assertEqual('request_failed')
+      expect(adapter.parse('{"records":[]}').warnings[0]).assertEqual('no_courses')
+    })
+
+    it('infers the term start when the page gives no date', 0, () => {
+      const adapter = EduImporters.byId('entss')
+      if (adapter === null) {
+        return
+      }
+      const payload: string = '{"sem":"202602","records":[' +
+        '{"kcmc":"课","zc":"1-4","qsxq":"6","qssj":"10:00:00","jssj":"11:40:00"}]}'
+      const result: ImportResult = adapter.parse(payload)
+      expect(result.term.label).assertEqual('2026-2027学年第2学期')
+      expect(result.term.startDate !== null).assertTrue()
+      if (result.term.startDate !== null) {
+        expect(result.term.startDate.getMonth()).assertEqual(1)
+      }
+      expect(result.courses[0].weekday).assertEqual(6)
+    })
+  })
+
   describe('registry', () => {
     it('lists adapters and rejects unknown ids', 0, () => {
-      expect(EduImporters.ids().length).assertEqual(2)
+      expect(EduImporters.ids().length).assertEqual(3)
       expect(EduImporters.byId('nope') === null).assertTrue()
     })
   })

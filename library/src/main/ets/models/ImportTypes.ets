@@ -86,3 +86,36 @@ export interface TablePayload {
   url?: string
   tables?: string[][][]
 }
+
+/**
+ * One row of the Entss (乘方) timetable API. The page renders its grid from
+ * these records, so the fields are already structured — no scraping needed.
+ */
+export interface EntssRecord {
+  /** Course name. */
+  kcmc?: string
+  /** Teachers, as the API joins them. */
+  teaxms?: string
+  /** Classroom. */
+  jxcdmc?: string
+  /** Weeks, for example `1-8,10-12`. */
+  zc?: string
+  /** First weekday, 1-7. */
+  qsxq?: string
+  /** Last weekday, 1-7. Usually the same as `qsxq`. */
+  jsxq?: string
+  /** Start time, `09:20:00`. */
+  qssj?: string
+  /** End time, `11:50:00`. */
+  jssj?: string
+}
+
+/** Payload produced by the Entss page script. */
+export interface EntssPayload {
+  error?: string
+  /** Semester code, for example `202601`. */
+  sem?: string
+  /** Monday of week 1 as `2026-09-07`. Empty when the page did not say. */
+  week1?: string
+  records?: EntssRecord[]
+}

@@ -1,6 +1,7 @@
 import { ScheduleAdapter } from './Adapter'
 import { GenericTableAdapter } from './GenericTableAdapter'
 import { QiangzhiAdapter } from './QiangzhiAdapter'
+import { EntssAdapter } from './EntssAdapter'
 import { PeriodTable } from '../core/PeriodTable'
 
 /**
@@ -24,6 +25,11 @@ export class EduImporters {
     return new QiangzhiAdapter(periods)
   }
 
+  /** Adapter for Entss (乘方), which serves the grid from an API. */
+  static entss(): ScheduleAdapter {
+    return new EntssAdapter()
+  }
+
   /** Looks an adapter up by id. Returns null for unknown ids. */
   static byId(id: string, periods: PeriodTable = PeriodTable.standard()): ScheduleAdapter | null {
     if (id === 'generic-table') {
@@ -32,11 +38,14 @@ export class EduImporters {
     if (id === 'qiangzhi') {
       return new QiangzhiAdapter(periods)
     }
+    if (id === 'entss') {
+      return new EntssAdapter()
+    }
     return null
   }
 
   /** Ids of the adapters shipped with this release. */
   static ids(): string[] {
-    return ['generic-table', 'qiangzhi']
+    return ['generic-table', 'qiangzhi', 'entss']
   }
 }

@@ -14,7 +14,7 @@
 
 ## 功能
 
-- 两个适配器：通用 HTML 表格、强智（Qiangzhi）版式
+- 三个适配器：通用 HTML 表格、强智（Qiangzhi）版式、乘方（Entss，直接读页面自己调的那个接口）
 - 注入脚本只返回 JSON，解析部分可以不依赖设备直接测试
 - 周次文本处理：`1-16周`、`1-8,10-12周`、`1-15周(单)`、`第3-5周`
 - 节次到时间的映射，节次表可替换
@@ -80,8 +80,9 @@ struct ImportPage {
 | 符号 | 用途 |
 | --- | --- |
 | `EduImporters.byId(id)` | 按 id 取适配器，未知 id 返回 null。 |
-| `EduImporters.ids()` | 当前版本内置的 id：`generic-table`、`qiangzhi`。 |
+| `EduImporters.ids()` | 当前版本内置的 id：`generic-table`、`qiangzhi`、`entss`。 |
 | `EduImporters.generic(periods?)` / `.qiangzhi(periods?)` | 直接构造适配器。 |
+| `EduImporters.entss()` | 构造乘方适配器，不需要节次表。 |
 | `runInWebView(controller, script)` | 在页面里执行脚本。不会抛异常，见下文。 |
 | `unwrapScriptResult(text)` | 去掉部分内核附加的那层 JSON 字符串包装。 |
 | `adapter.parse(raw)` | 把脚本输出转成 `ImportResult`，不会抛异常。 |
@@ -104,7 +105,9 @@ interface ImportResult {
 
 `ImportedCourse` 包含 `name`、`teacher`、`room`、`campus`、`weekday`（1-7）、`startPeriod`、`endPeriod`、`weeks`、`startTime`、`endTime`。`TermInfo` 包含 `label`、`startDate`、`totalWeeks`。
 
-`warnings` 是固定编码：`invalid_json`、`no_schedule_page`、`no_weekday_header`、`no_courses`、`missing_weeks`、`script_failed`。
+乘方来源的课程 `startPeriod` 与 `endPeriod` 是 0。这个适配器拿到的是学校自己的上下课时间，不做节次换算，所以该读的是 `startTime` 和 `endTime`。
+
+`warnings` 是固定编码：`invalid_json`、`no_schedule_page`、`no_semester`、`request_failed`、`no_weekday_header`、`no_courses`、`missing_weeks`、`script_failed`。
 
 ArkWeb 拒绝执行脚本时（控制器已解绑、页面已销毁），`runInWebView` 返回 `{"error":"script_failed"}` 而不是抛异常；适配器会把它变成 `script_failed` 警告。所以整条链路不需要包一层 `try`。
 
@@ -148,6 +151,24 @@ ArkWeb 拒绝执行脚本时（控制器已解绑、页面已销毁），`runInW
   ]
 }
 ```
+
+`entss`
+
+```json
+{
+  "sem": "202601",
+  "week1": "2026-09-07",
+  "records": [
+    {
+      "kcmc": "高等数学", "teaxms": "张三", "jxcdmc": "博学楼203",
+      "zc": "1-16", "qsxq": "1", "jsxq": "1",
+      "qssj": "08:00:00", "jssj": "09:40:00"
+    }
+  ]
+}
+```
+
+`records` 就是学校课表接口的行，原样透传。`zc` 是 `1-8,10-12` 这种周次，`qsxq`、`jsxq` 是数字形式的星期，两个时间字段是 `HH:mm:ss`。`jsxq` 大于 `qsxq` 时，中间的每一天都会生成一门课——连排三个下午的实验课就是这么来的。
 
 ## 新增适配器
 
@@ -198,7 +219,9 @@ hvigor 还可能多打印两条本地模块的提示：`Missing module info for 
 - 一个适配器对应一种版式。厂商改版就会失效，需要持续维护。
 - 时间来自 `PeriodTable`，不是页面。作息不同的学校要自己准备节次表。
 - 通用表格适配器按 `名称(1-2节)1-16周校区教室教师` 的顺序读。缺的部分留空；顺序特别怪的，教室名可能落到教师字段里。整格没有节次标记时退化成「整格当课程名」，且只在这一格只有一行时生效。
-- 强智适配器依赖 `.kbcontent` 与 `font[title]` 提示。其他厂商暂未实现。
+- 强智适配器依赖 `.kbcontent` 与 `font[title]` 提示。
+- 乘方适配器用的两个接口（`getCalendarWeekDatas`、`getDatesOfWeek`）和页面里的学期代码，接口改名、或者页面不再带学期字段，就会返回 `request_failed` 或 `no_semester`。
+- 其他厂商暂未实现。
 
 ## 测试
 
