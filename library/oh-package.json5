@@ -1,6 +1,6 @@
 {
   "name": "@chinokoyuki/edu-schedule-importer",
-  "version": "1.1.0",
+  "version": "0.2.0",
   "description": "Read a school timetable from an ArkWeb session and turn it into structured courses.",
   "main": "Index.ets",
   "author": "chinokoyuki",
